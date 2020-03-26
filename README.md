@@ -13,16 +13,16 @@ npm i @jarzzzi/resourcehints-webpack-plugin --save-dev
   - 排除的 chunk
 + includ
   - string｜{Array<string>}|undefined
-  - 'all'
-  - 'initial'
-  - 'async'
+  - all
+  - initial
+  - async
   - 指定的 chunk
 + rel
   - string
   - dns-prefetch
   - preconnect
   - preload
-  - prefetch, 
+  - prefetch
 + as
   - string
   - image, font, style, script, fetch, audio, video, worker, document, object, embed, track
