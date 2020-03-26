@@ -26,7 +26,7 @@
   "scripts": {
     "clean": "rimraf build",
     "build": "npm run clean && babel src --out-dir=dist --presets=@babel/env",
-    "publish-stable": "npm run build && npm publish --access=public",
+    "publish-stable": "npm run build && npm version patch && npm publish --access=public",
     "publish-next": "npm run build && npm publish --tag next --access=public"
   },
   "peerDependencies": {
