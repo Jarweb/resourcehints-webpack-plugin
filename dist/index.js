@@ -63,7 +63,8 @@ var ResourceHintWebpackPlugin = /*#__PURE__*/function () {
       excludeHtml: [].concat(_toConsumableArray(defaultOptions.excludeHtml), _toConsumableArray(options.excludeHtml || [])),
       exclude: [].concat(_toConsumableArray(defaultOptions.exclude), _toConsumableArray(options.exclude || []))
     });
-    this.htmlTemplate = '';
+    this.htmlChunkAssetsTemplate = '';
+    this.htmlModuleAssetTemplate = '';
   }
 
   _createClass(ResourceHintWebpackPlugin, [{
@@ -115,7 +116,7 @@ var ResourceHintWebpackPlugin = /*#__PURE__*/function () {
           var asValue = '';
           if (file.match(/\.woff2|ttf|eot$/)) asValue = 'font';else if (file.match(/\.(jpeg|png|svg|jpg|gif|webp)$/)) asValue = 'image';else if (file.match(/\.(mp3|m3u8|wma|wav)$/)) asValue = 'audio';else if (file.match(/\.(mp4|avi|mov|flv|wmv|m4v|ogg|mpeg|webm)$/)) asValue = 'video';else asValue = _this2.options.as;
           var crossOrigin = asValue === 'font' ? 'crossorigin="crossorigin"' : '';
-          _this2.htmlTemplate += "<link rel=\"".concat(_this2.options.rel, "\" as=\"").concat(asValue, "\" ").concat(crossOrigin, " href=\"").concat(file, "\">\n");
+          _this2.htmlModuleAssetTemplate += "<link rel=\"".concat(_this2.options.rel, "\" as=\"").concat(asValue, "\" ").concat(crossOrigin, " href=\"").concat(file, "\">\n");
         }
       });
     }
@@ -134,7 +135,8 @@ var ResourceHintWebpackPlugin = /*#__PURE__*/function () {
 
       var assetsCss = _toConsumableArray(htmlPluginData.assets.css);
 
-      var extractedChunks = []; // 排除的地址，不插入 resource hints，一般多页？？
+      var extractedChunks = [];
+      var htmlChunkAssetsTemplate = ''; // 排除的地址，不插入 resource hints，一般多页？？
 
       if (this.options.excludeHtml.indexOf(plugin.options.filename) > -1) {
         return htmlPluginData;
@@ -144,7 +146,7 @@ var ResourceHintWebpackPlugin = /*#__PURE__*/function () {
       if (this.options.rel === 'dns-prefetch' || this.options.rel === 'preconnect') {
         if (!Array.isArray(this.options.include)) return htmlPluginData;
         this.options.include.forEach(function (href) {
-          _this3.htmlTemplate += "<link rel=\"".concat(_this3.options.rel, "\" href=\"").concat(href, "\">\n");
+          htmlChunkAssetsTemplate += "<link rel=\"".concat(_this3.options.rel, "\" href=\"").concat(href, "\">\n");
         });
       } // 处理 prefetch，chunk 必须是 async 的，不适合多页
 
@@ -165,7 +167,7 @@ var ResourceHintWebpackPlugin = /*#__PURE__*/function () {
           return chunk.indexOf('.js.map') === -1;
         }).forEach(function (chunk) {
           var href = "".concat(publicPath).concat(chunk);
-          _this3.htmlTemplate += "<link rel=\"prefetch\" href=\"".concat(href, "\">\n");
+          htmlChunkAssetsTemplate += "<link rel=\"prefetch\" href=\"".concat(href, "\">\n");
         });
       } // 处理 preload
 
@@ -294,19 +296,20 @@ var ResourceHintWebpackPlugin = /*#__PURE__*/function () {
         extractedChunks.forEach(function (href) {
           var asValue = _this3.options.as;
           if (href.match(/\.css$/)) asValue = 'style';else if (href.match(/\.js$/)) asValue = 'script';else asValue = 'script';
-          _this3.htmlTemplate += "<link rel=\"preload\" as=\"".concat(asValue, "\" href=\"").concat(href, "\">\n");
+          htmlChunkAssetsTemplate += "<link rel=\"preload\" as=\"".concat(asValue, "\" href=\"").concat(href, "\">\n");
         });
       }
 
+      this.htmlChunkAssetsTemplate = htmlChunkAssetsTemplate;
       return htmlPluginData;
     }
   }, {
     key: "appendToHtml",
     value: function appendToHtml(htmlPluginData) {
       if (htmlPluginData.html.indexOf('</head>') !== -1) {
-        htmlPluginData.html = htmlPluginData.html.replace('</head>', this.htmlTemplate + '</head>');
+        htmlPluginData.html = htmlPluginData.html.replace('</head>', this.htmlModuleAssetTemplate + this.htmlChunkAssetsTemplate + '</head>');
       } else {
-        htmlPluginData.html = htmlPluginData.html.replace('<body>', '<head>' + this.htmlTemplate + '</head><body>');
+        htmlPluginData.html = htmlPluginData.html.replace('<body>', '<head>' + this.htmlModuleAssetTemplate + this.htmlChunkAssetsTemplate + '</head><body>');
       }
 
       return htmlPluginData;
