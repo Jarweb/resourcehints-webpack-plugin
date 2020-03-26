@@ -26,8 +26,8 @@
   "scripts": {
     "clean": "rimraf build",
     "build": "npm run clean && babel src --out-dir=dist --presets=@babel/env",
-    "publish-stable": "npm run build && npm publish",
-    "publish-next": "npm run build && npm publish --tag next"
+    "publish-stable": "npm run build && npm publish --access=public",
+    "publish-next": "npm run build && npm publish --tag next --access=public"
   },
   "peerDependencies": {
     "html-webpack-plugin": ">=4.0.0",
