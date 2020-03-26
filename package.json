@@ -1,6 +1,6 @@
 {
   "name": "@jarzzzi/resourcehints-webpack-plugin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "webpack plugin for resource hints",
   "main": "dist/index.js",
   "repository": {
