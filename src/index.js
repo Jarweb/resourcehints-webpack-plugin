@@ -81,7 +81,6 @@ class ResourceHintWebpackPlugin {
         this.htmlTemplate += `<link rel="${this.options.rel}" as="${asValue}" ${crossOrigin } href="${file}">\n`
       }
     })
-    console.log(this.htmlTemplate)
   }
 
   genChunkAssetLinks(compilation, htmlPluginData) {
