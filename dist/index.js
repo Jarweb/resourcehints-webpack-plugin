@@ -118,7 +118,6 @@ var ResourceHintWebpackPlugin = /*#__PURE__*/function () {
           _this2.htmlTemplate += "<link rel=\"".concat(_this2.options.rel, "\" as=\"").concat(asValue, "\" ").concat(crossOrigin, " href=\"").concat(file, "\">\n");
         }
       });
-      console.log(this.htmlTemplate);
     }
   }, {
     key: "genChunkAssetLinks",
