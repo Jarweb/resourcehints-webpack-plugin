@@ -1,4 +1,5 @@
 ## install
+support webpack 4x
 ```
 npm i @jarzzzi/resourcehints-webpack-plugin --save-dev
 ```
