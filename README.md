@@ -12,7 +12,7 @@ npm i @jarzzzi/resourcehints-webpack-plugin --save-dev
   - {Array<string>}|undefined
   - 排除的 chunk
 + includ
-  - string｜{Array<string>}|undefined
+  - string|{Array<string>}|undefined
   - all
   - initial
   - async
