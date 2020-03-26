@@ -13,12 +13,13 @@ const defaultOptions = {
 class ResourceHintWebpackPlugin {
   constructor(options) {
     this.options = {
-      ...defaultOptions, 
+      ...defaultOptions,
       ...options,
       excludeHtml: [...defaultOptions.excludeHtml, ...(options.excludeHtml || [])],
       exclude: [...defaultOptions.exclude, ...(options.exclude || [])],
     }
-    this.htmlTemplate = ''
+    this.htmlChunkAssetsTemplate = ''
+    this.htmlModuleAssetTemplate = ''
   }
 
   apply(compiler) {
@@ -60,13 +61,13 @@ class ResourceHintWebpackPlugin {
 
   genModuleAssetLinks(file) {
     if (
-      !Array.isArray(this.options.include) && 
-      !this.options.as && 
+      !Array.isArray(this.options.include) &&
+      !this.options.as &&
       (this.options.rel !== 'preload' || this.options.rel !== 'prefetch')
     ) return
 
     const f = file.split('/').pop()
-    
+
     this.options.include.forEach(item => {
       if (f.startsWith(item)) {
         let asValue = ''
@@ -78,7 +79,7 @@ class ResourceHintWebpackPlugin {
         else asValue = this.options.as
 
         const crossOrigin = asValue === 'font' ? 'crossorigin="crossorigin"' : ''
-        this.htmlTemplate += `<link rel="${this.options.rel}" as="${asValue}" ${crossOrigin } href="${file}">\n`
+        this.htmlModuleAssetTemplate += `<link rel="${this.options.rel}" as="${asValue}" ${crossOrigin} href="${file}">\n`
       }
     })
   }
@@ -91,18 +92,19 @@ class ResourceHintWebpackPlugin {
     const assetsJs = [...htmlPluginData.assets.js]
     const assetsCss = [...htmlPluginData.assets.css]
     let extractedChunks = []
+    let htmlChunkAssetsTemplate = ''
 
     // 排除的地址，不插入 resource hints，一般多页？？
     if (this.options.excludeHtml.indexOf(plugin.options.filename) > -1) {
       return htmlPluginData
     }
-    
+
     // 处理 dns-prefetch, preconnect
     if (this.options.rel === 'dns-prefetch' || this.options.rel === 'preconnect') {
       if (!Array.isArray(this.options.include)) return htmlPluginData
-      
+
       this.options.include.forEach((href) => {
-        this.htmlTemplate += `<link rel="${this.options.rel}" href="${href}">\n`
+        htmlChunkAssetsTemplate += `<link rel="${this.options.rel}" href="${href}">\n`
       })
     }
 
@@ -119,7 +121,7 @@ class ResourceHintWebpackPlugin {
         .filter(chunk => chunk.indexOf('.js.map') === -1)
         .forEach(chunk => {
           const href = `${publicPath}${chunk}`
-          this.htmlTemplate += `<link rel="prefetch" href="${href}">\n`
+          htmlChunkAssetsTemplate += `<link rel="prefetch" href="${href}">\n`
         })
     }
 
@@ -139,9 +141,9 @@ class ResourceHintWebpackPlugin {
           .map(chunk => `${publicPath}${chunk}`)
 
         extractedChunks = differenceWith(chunksFiles, this.options.exclude, (a, b) => {
-            const file = a.split('/').pop()
-            return file.indexOf(b) > -1
-          })
+          const file = a.split('/').pop()
+          return file.indexOf(b) > -1
+        })
       }
       // initial chunk，与 assets 合并去重，排除 exclude 的 chunk，不适合多页？
       else if (this.options.include === 'initial') {
@@ -172,7 +174,7 @@ class ResourceHintWebpackPlugin {
         extractedChunks = [...new Set([...assets, ...chunksFiles])]
         extractedChunks = differenceWith(extractedChunks, this.options.exclude, (a, b) => {
           const file = a.split('/').pop()
-          return file.indexOf(b) > -1 
+          return file.indexOf(b) > -1
         })
       }
       // 只插入外部指定的 chunk，需要指定 as
@@ -182,7 +184,7 @@ class ResourceHintWebpackPlugin {
           const chunksFiles = flatten(files)
             .filter(chunk => chunk.indexOf('.js.map') === -1)
             .map(chunk => `${publicPath}${chunk}`)
-         
+
           extractedChunks = [...new Set([...assetsJs, ...chunksFiles])]
           extractedChunks = takeWhile(extractedChunks, (item) => {
             const file = item.split('/').pop()
@@ -218,23 +220,35 @@ class ResourceHintWebpackPlugin {
 
       extractedChunks.forEach(href => {
         let asValue = this.options.as
-        
+
         if (href.match(/\.css$/)) asValue = 'style'
         else if (href.match(/\.js$/)) asValue = 'script'
         else asValue = 'script'
 
-        this.htmlTemplate += `<link rel="preload" as="${asValue}" href="${href}">\n`
+        htmlChunkAssetsTemplate += `<link rel="preload" as="${asValue}" href="${href}">\n`
       })
     }
 
+    this.htmlChunkAssetsTemplate = htmlChunkAssetsTemplate
     return htmlPluginData
   }
 
   appendToHtml(htmlPluginData) {
     if (htmlPluginData.html.indexOf('</head>') !== -1) {
-      htmlPluginData.html = htmlPluginData.html.replace('</head>', this.htmlTemplate + '</head>');
+      htmlPluginData.html = htmlPluginData.html.replace(
+        '</head>',
+        this.htmlModuleAssetTemplate +
+        this.htmlChunkAssetsTemplate +
+        '</head>'
+      )
     } else {
-      htmlPluginData.html = htmlPluginData.html.replace('<body>', '<head>' + this.htmlTemplate + '</head><body>');
+      htmlPluginData.html = htmlPluginData.html.replace(
+        '<body>',
+        '<head>' +
+        this.htmlModuleAssetTemplate +
+        this.htmlChunkAssetsTemplate +
+        '</head><body>'
+      )
     }
 
     return htmlPluginData
